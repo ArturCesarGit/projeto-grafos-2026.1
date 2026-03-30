@@ -1,0 +1,6 @@
+origem,destino,custo,caminho
+REC,POA,2973.82,REC -> GRU -> POA
+MAO,GRU,2689.83,MAO -> GRU
+JPA,CWB,3625.2,JPA -> REC -> GRU -> POA -> CWB
+PVH,FLN,4270.15,PVH -> MAO -> POA -> FLN
+THE,VIX,3799.3,THE -> REC -> GRU -> VIX

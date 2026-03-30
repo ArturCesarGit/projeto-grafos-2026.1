@@ -2,111 +2,50 @@ import os
 import json
 import csv
 from src.graphs.io import load_graph
+from src.graphs.algorithms import dijkstra
 
-def exportar_metricas():
-    # Garante que a pasta out/ existe
+def exportar_metricas(grafo):
+    # (Código que já fizemos antes para gerar global.json, regioes.json, etc.)
     os.makedirs('out', exist_ok=True)
-    
-    grafo = load_graph()
     todos_nos = grafo.get_nodes()
     
-    # ---------------------------------------------------------
-    # 1. MÉTRICAS GLOBAIS -> out/global.json
-    # ---------------------------------------------------------
-    metricas_globais = {
-        "ordem": grafo.get_order(),
-        "tamanho": grafo.get_size(),
-        "densidade": round(grafo.get_density(), 4)
-    }
-    
-    with open('out/global.json', 'w', encoding='utf-8') as f:
-        json.dump(metricas_globais, f, indent=4)
+    # 1. Global
+    metricas_globais = {"ordem": grafo.get_order(), "tamanho": grafo.get_size(), "densidade": round(grafo.get_density(), 4)}
+    with open('out/global.json', 'w', encoding='utf-8') as f: json.dump(metricas_globais, f, indent=4)
         
-    print("✅ out/global.json gerado.")
-
-    # ---------------------------------------------------------
-    # 2. GRAUS DOS AEROPORTOS -> out/graus.csv
-    # ---------------------------------------------------------
-    lista_graus = []
-    for no in todos_nos:
-        lista_graus.append([no, grafo.get_degree(no)])
-    
-    # Ordenando do maior para o menor grau (opcional, mas fica mais bonito)
-    lista_graus.sort(key=lambda x: x[1], reverse=True)
-    
+    # 2. Graus
+    lista_graus = sorted([[no, grafo.get_degree(no)] for no in todos_nos], key=lambda x: x[1], reverse=True)
     with open('out/graus.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(['aeroporto', 'grau'])
         writer.writerows(lista_graus)
-        
-    print("✅ out/graus.csv gerado.")
 
-    # ---------------------------------------------------------
-    # 3. MÉTRICAS POR REGIÃO -> out/regioes.json
-    # ---------------------------------------------------------
-    # Primeiro, vamos agrupar os aeroportos por região
-    regioes = {}
+    # 3. Regiões
+    regioes, metricas_regioes = {}, {}
     for no in todos_nos:
         regiao = grafo.nodes[no]['regiao']
-        if regiao not in regioes:
-            regioes[regiao] = []
-        regioes[regiao].append(no)
+        regioes.setdefault(regiao, []).append(no)
         
-    metricas_regioes = {}
-    
-    for nome_regiao, aeroportos_regiao in regioes.items():
-        v = len(aeroportos_regiao)
-        # Contando as arestas que existem apenas DENTRO dessa região
-        e = 0
-        for i in range(len(aeroportos_regiao)):
-            for j in range(i + 1, len(aeroportos_regiao)):
-                aero1 = aeroportos_regiao[i]
-                aero2 = aeroportos_regiao[j]
-                if aero2 in grafo.adj.get(aero1, {}):
-                    e += 1
-                    
-        # Calculando a densidade regional
-        densidade = 0.0
-        if v >= 2:
-            densidade = (2 * e) / (v * (v - 1))
-            
-        metricas_regioes[nome_regiao] = {
-            "ordem": v,
-            "tamanho": e,
-            "densidade": round(densidade, 4)
-        }
+    for nome, aeros in regioes.items():
+        v, e = len(aeros), 0
+        for i in range(v):
+            for j in range(i + 1, v):
+                if aeros[j] in grafo.adj.get(aeros[i], {}): e += 1
+        densidade = (2 * e) / (v * (v - 1)) if v >= 2 else 0.0
+        metricas_regioes[nome] = {"ordem": v, "tamanho": e, "densidade": round(densidade, 4)}
         
-    with open('out/regioes.json', 'w', encoding='utf-8') as f:
-        json.dump(metricas_regioes, f, indent=4, ensure_ascii=False)
-        
-    print("✅ out/regioes.json gerado.")
+    with open('out/regioes.json', 'w', encoding='utf-8') as f: json.dump(metricas_regioes, f, indent=4, ensure_ascii=False)
 
-    # ---------------------------------------------------------
-    # 4. EGO-NETWORKS -> out/ego_aeroportos.csv
-    # ---------------------------------------------------------
+    # 4. Ego-Networks
     ego_dados = []
-    
     for no in todos_nos:
         grau = grafo.get_degree(no)
-        vizinhos = list(grafo.adj.get(no, {}).keys())
-        
-        # A ego-network inclui o nó central + seus vizinhos
-        nos_ego = [no] + vizinhos
-        v_ego = len(nos_ego)
-        
-        # Contando as arestas dentro da ego-network
-        e_ego = 0
-        for i in range(len(nos_ego)):
-            for j in range(i + 1, len(nos_ego)):
-                a1 = nos_ego[i]
-                a2 = nos_ego[j]
-                if a2 in grafo.adj.get(a1, {}):
-                    e_ego += 1
-                    
-        densidade_ego = 0.0
-        if v_ego >= 2:
-            densidade_ego = (2 * e_ego) / (v_ego * (v_ego - 1))
-            
+        nos_ego = [no] + list(grafo.adj.get(no, {}).keys())
+        v_ego, e_ego = len(nos_ego), 0
+        for i in range(v_ego):
+            for j in range(i + 1, v_ego):
+                if nos_ego[j] in grafo.adj.get(nos_ego[i], {}): e_ego += 1
+        densidade_ego = (2 * e_ego) / (v_ego * (v_ego - 1)) if v_ego >= 2 else 0.0
         ego_dados.append([no, grau, v_ego, e_ego, round(densidade_ego, 4)])
         
     with open('out/ego_aeroportos.csv', 'w', newline='', encoding='utf-8') as f:
@@ -114,8 +53,43 @@ def exportar_metricas():
         writer.writerow(['aeroporto', 'grau', 'ordem_ego', 'tamanho_ego', 'densidade_ego'])
         writer.writerows(ego_dados)
         
-    print("✅ out/ego_aeroportos.csv gerado.")
-    print("\n🎉 Todas as métricas da Parte 1 foram exportadas com sucesso para a pasta 'out/'!")
+    print("✅ Métricas da Parte 1 exportadas.")
+
+def calcular_rotas_dijkstra(grafo):
+    rotas = []
+    
+    # Lendo o arquivo de rotas que criamos
+    with open('data/rotas.csv', 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rotas.append((row['origem'], row['destino']))
+            
+    resultados = []
+    
+    print("\n🗺️  Calculando rotas com Dijkstra:")
+    for origem, destino in rotas:
+        custo, caminho = dijkstra(grafo, origem, destino)
+        
+        # Transforma a lista do caminho ['REC', 'GRU', 'POA'] numa string bonitinha 'REC -> GRU -> POA'
+        caminho_str = " -> ".join(caminho) if caminho else "Sem rota"
+        resultados.append([origem, destino, custo, caminho_str])
+        
+        print(f"  {origem} para {destino}: {custo} km | Caminho: {caminho_str}")
+        
+    # Salvando no arquivo exigido
+    with open('out/distancias_rotas.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['origem', 'destino', 'custo', 'caminho'])
+        writer.writerows(resultados)
+        
+    print("\n✅ Arquivo out/distancias_rotas.csv gerado com sucesso!")
+
+def main():
+    print("✈️  Iniciando processamento do Grafo...")
+    grafo = load_graph()
+    
+    exportar_metricas(grafo)
+    calcular_rotas_dijkstra(grafo)
 
 if __name__ == '__main__':
-    exportar_metricas()
+    main()
