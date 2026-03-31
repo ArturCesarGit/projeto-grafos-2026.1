@@ -3,9 +3,9 @@ import json
 import csv
 from src.graphs.io import load_graph
 from src.graphs.algorithms import dijkstra
+from src.viz import gerar_arvore_percurso
 
 def exportar_metricas(grafo):
-    # (Código que já fizemos antes para gerar global.json, regioes.json, etc.)
     os.makedirs('out', exist_ok=True)
     todos_nos = grafo.get_nodes()
     
@@ -57,8 +57,6 @@ def exportar_metricas(grafo):
 
 def calcular_rotas_dijkstra(grafo):
     rotas = []
-    
-    # Lendo o arquivo de rotas que criamos
     with open('data/rotas.csv', 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -66,23 +64,33 @@ def calcular_rotas_dijkstra(grafo):
             
     resultados = []
     
+    # Declarando as variáveis antes de iniciar a busca!
+    caminho_rec_poa = []
+    caminho_mao_gru = []
+    
     print("\n🗺️  Calculando rotas com Dijkstra:")
     for origem, destino in rotas:
         custo, caminho = dijkstra(grafo, origem, destino)
         
-        # Transforma a lista do caminho ['REC', 'GRU', 'POA'] numa string bonitinha 'REC -> GRU -> POA'
+        # Guardando o trajeto apenas das rotas obrigatórias
+        if origem == 'REC' and destino == 'POA':
+            caminho_rec_poa = caminho
+        elif origem == 'MAO' and destino == 'GRU':
+            caminho_mao_gru = caminho
+            
         caminho_str = " -> ".join(caminho) if caminho else "Sem rota"
         resultados.append([origem, destino, custo, caminho_str])
-        
         print(f"  {origem} para {destino}: {custo} km | Caminho: {caminho_str}")
         
-    # Salvando no arquivo exigido
     with open('out/distancias_rotas.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(['origem', 'destino', 'custo', 'caminho'])
         writer.writerows(resultados)
         
-    print("\n✅ Arquivo out/distancias_rotas.csv gerado com sucesso!")
+    print("✅ Arquivo out/distancias_rotas.csv gerado com sucesso!")
+    
+    # Gerando a árvore html
+    gerar_arvore_percurso(caminho_rec_poa, caminho_mao_gru)
 
 def main():
     print("✈️  Iniciando processamento do Grafo...")
