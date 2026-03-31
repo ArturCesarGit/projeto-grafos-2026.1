@@ -1,0 +1,1 @@
+Para gerar todos os resultados da Parte 1, execute: python -m src.solve

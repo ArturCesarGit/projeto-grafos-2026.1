@@ -3,7 +3,7 @@ import json
 import csv
 from src.graphs.io import load_graph
 from src.graphs.algorithms import dijkstra
-from src.viz import gerar_arvore_percurso, gerar_graficos_analiticos
+from src.viz import gerar_arvore_percurso, gerar_graficos_analiticos, gerar_grafo_completo
 
 def exportar_metricas(grafo):
     os.makedirs('out', exist_ok=True)
@@ -57,6 +57,10 @@ def exportar_metricas(grafo):
 
 def calcular_rotas_dijkstra(grafo):
     rotas = []
+    if not os.path.exists('data/rotas.csv'):
+        print("❌ Erro: Arquivo data/rotas.csv não encontrado.")
+        return
+
     with open('data/rotas.csv', 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -64,7 +68,7 @@ def calcular_rotas_dijkstra(grafo):
             
     resultados = []
     
-    # Declarando as variáveis antes de iniciar a busca!
+    # Declarando as variáveis antes de iniciar a busca
     caminho_rec_poa = []
     caminho_mao_gru = []
     
@@ -72,7 +76,7 @@ def calcular_rotas_dijkstra(grafo):
     for origem, destino in rotas:
         custo, caminho = dijkstra(grafo, origem, destino)
         
-        # Guardando o trajeto apenas das rotas obrigatórias
+        # Guardando o trajeto apenas das rotas obrigatórias para a visualização
         if origem == 'REC' and destino == 'POA':
             caminho_rec_poa = caminho
         elif origem == 'MAO' and destino == 'GRU':
@@ -89,8 +93,7 @@ def calcular_rotas_dijkstra(grafo):
         
     print("✅ Arquivo out/distancias_rotas.csv gerado com sucesso!")
     
-    # Gerando a árvore html
-    gerar_arvore_percurso(caminho_rec_poa, caminho_mao_gru)
+    gerar_arvore_percurso(grafo, caminho_rec_poa, caminho_mao_gru)
 
 def main():
     print("✈️  Iniciando processamento do Grafo...")
@@ -99,6 +102,7 @@ def main():
     exportar_metricas(grafo)
     calcular_rotas_dijkstra(grafo)
     gerar_graficos_analiticos()
+    gerar_grafo_completo(grafo)
 
 if __name__ == '__main__':
     main()
