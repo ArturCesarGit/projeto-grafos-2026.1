@@ -3,7 +3,7 @@ import json
 import csv
 from src.graphs.io import load_graph
 from src.graphs.algorithms import dijkstra
-from src.viz import gerar_arvore_percurso
+from src.viz import gerar_arvore_percurso, gerar_graficos_analiticos
 
 def exportar_metricas(grafo):
     os.makedirs('out', exist_ok=True)
@@ -98,6 +98,7 @@ def main():
     
     exportar_metricas(grafo)
     calcular_rotas_dijkstra(grafo)
+    gerar_graficos_analiticos()
 
 if __name__ == '__main__':
     main()
