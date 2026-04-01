@@ -282,8 +282,8 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#e74c3c", "font": {"color": "white"}, "id": "REC", "label": "REC", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Nordeste"}, {"color": "#3498db", "font": {"color": "white"}, "id": "GRU", "label": "GRU", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Sudeste"}, {"color": "#9b59b6", "font": {"color": "white"}, "id": "POA", "label": "POA", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Sul"}, {"color": "#2ecc71", "font": {"color": "white"}, "id": "MAO", "label": "MAO", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Norte"}]);
-                  edges = new vis.DataSet([{"arrows": "to", "color": "#27ae60", "from": "REC", "to": "GRU", "width": 4}, {"arrows": "to", "color": "#27ae60", "from": "GRU", "to": "POA", "width": 4}, {"arrows": "to", "color": "#3498db", "from": "MAO", "to": "GRU", "width": 4}]);
+                  nodes = new vis.DataSet([{"color": "#e74c3c", "font": {"color": "white"}, "id": "REC", "label": "REC", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Nordeste"}, {"color": "#9b59b6", "font": {"color": "white"}, "id": "POA", "label": "POA", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Sul"}, {"color": "#2ecc71", "font": {"color": "white"}, "id": "MAO", "label": "MAO", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Norte"}, {"color": "#3498db", "font": {"color": "white"}, "id": "GRU", "label": "GRU", "shape": "dot", "size": 25, "title": "Regi\u00e3o: Sudeste"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#27ae60", "from": "REC", "to": "POA", "width": 4}, {"arrows": "to", "color": "#3498db", "from": "MAO", "to": "GRU", "width": 4}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });

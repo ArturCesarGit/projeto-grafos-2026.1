@@ -1,7 +1,7 @@
 import os
 import json
 import csv
-from src.graphs.io import load_graph
+from src.graphs.io import load_graph , gerar_malha_csv
 from src.graphs.algorithms import dijkstra
 from src.viz import gerar_arvore_percurso, gerar_graficos_analiticos, gerar_grafo_completo
 
@@ -9,7 +9,7 @@ def exportar_metricas(grafo):
     os.makedirs('out', exist_ok=True)
     todos_nos = grafo.get_nodes()
     
-    # 1. Global
+    # 1. Global 
     metricas_globais = {"ordem": grafo.get_order(), "tamanho": grafo.get_size(), "densidade": round(grafo.get_density(), 4)}
     with open('out/global.json', 'w', encoding='utf-8') as f: json.dump(metricas_globais, f, indent=4)
         
@@ -97,6 +97,8 @@ def calcular_rotas_dijkstra(grafo):
 
 def main():
     print("✈️  Iniciando processamento do Grafo...")
+    # Adicionamos esta linha: O código agora constrói as arestas automaticamente!
+    gerar_malha_csv()
     grafo = load_graph()
     
     exportar_metricas(grafo)
