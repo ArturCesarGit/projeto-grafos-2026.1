@@ -104,33 +104,38 @@ def gerar_grafo_completo(grafo):
     os.makedirs('out', exist_ok=True)
     print("\n🌐 Gerando visualização interativa do grafo completo...")
     
-    # cdn_resources='remote' para evitar a tela preta
-    net = Network(height='800px', width='100%', directed=True, bgcolor='#1a1a1a', font_color='white', select_menu=True, cdn_resources='remote')
+    # MUDANÇA AQUI: directed=False para remover as setas e deixar só a linha!
+    net = Network(height='800px', width='100%', directed=False, bgcolor='#1a1a1a', font_color='white', select_menu=True, cdn_resources='remote')
     
     cores_regioes = {
         'Norte': '#2ecc71', 'Nordeste': '#e74c3c', 'Centro-Oeste': '#f1c40f',
         'Sudeste': '#3498db', 'Sul': '#9b59b6'
     }
     
-    # 1. Adicionando os Vértices usando os métodos da sua classe
+    # 1. Adicionando os Vértices
     for no in grafo.get_nodes():
-        # Pegamos os dados do nó (região)
         dados_no = grafo.nodes.get(no, {})
         regiao = dados_no.get('regiao', 'Desconhecida')
         cor = cores_regioes.get(regiao, '#ffffff')
         
-        # Usando o seu método get_neighbors para calcular o grau
         vizinhos = grafo.get_neighbors(no)
         grau = len(vizinhos)
         
         hover_text = f"Aeroporto: {no}\nRegião: {regiao}\nConexões: {grau}"
         net.add_node(no, label=no, title=hover_text, color=cor, size=20 + (grau * 2)) 
         
-    # 2. Adicionando as Arestas
+    # 2. Adicionando as Arestas (Apenas uma linha por conexão)
+    arestas_desenhadas = set() # Usamos um set para não desenhar a linha duas vezes
+    
     for origem in grafo.get_nodes():
         for destino, dados in grafo.adj.get(origem, {}).items():
-            distancia = dados.get('peso', 0)
-            net.add_edge(origem, destino, title=f"{distancia} km", color='#555555', width=1.5)
+            # frozenset garante que (A, B) e (B, A) sejam vistos como a mesma coisa
+            par = frozenset([origem, destino])
+            
+            if par not in arestas_desenhadas:
+                distancia = dados.get('peso', 0)
+                net.add_edge(origem, destino, title=f"{distancia} km", color='#555555', width=1.5)
+                arestas_desenhadas.add(par)
             
     net.toggle_physics(True)
     net.force_atlas_2based()
